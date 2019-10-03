@@ -1,0 +1,67 @@
+version: '3'
+
+services:
+
+  api:
+    build: 
+      context: ./docker/api
+      dockerfile: Dockerfile
+    image: app-api
+    container_name: app-api
+    restart: unless-stopped
+    tty: true
+    environment:
+      SERVICE_NAME: APP_API
+      SERVICE_TAGS: DEV
+    working_dir: /app
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./app-api:/app
+      - ./docker/api/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - app-network
+    
+  cms:
+    build:
+      context: ./docker/cms
+      dockerfile: Dockerfile
+    image: app-cms
+    container_name: app-cms
+    restart: unless-stopped
+    tty: true
+    environment:
+      SERVICE_NAME: APP_CMS
+      SERVICE_TAGS: DEVELOPMENT
+    working_dir: /app
+    ports:
+      - "80:80"
+    volumes:
+      - ./app-cms:/app
+    networks:
+      - app-network
+    
+  db:
+    image: mysql:5.7
+    container_name: app-db
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'app'
+      MYSQL_USER: 'root'
+      MYSQL_PASSWORD: 'root'
+      MYSQL_ROOT_PASSWORD: 'root'
+    ports:
+      - '3306:3306'
+    expose:
+      - '3306'
+    volumes:
+      - app-data:/var/lib/mysql
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  app-data:
